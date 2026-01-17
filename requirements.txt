@@ -1,0 +1,19 @@
+# LlamaIndex + Gemini
+llama-index
+llama-index-llms-gemini
+llama-index-embeddings-gemini
+llama-index-vector-stores-postgres
+llama-index-readers-file
+
+# The Database Drivers
+psycopg2-binary
+asyncpg
+
+# The Backend (API)
+fastapi
+uvicorn
+python-dotenv
+
+# The Frontend (UI)
+streamlit
+watchdog
