@@ -60,7 +60,7 @@ The application handles compliance logic via a **Strategy Pattern**. The backend
 
 ### Step 1: Clone the Repository
 ```bash
-git clone [https://github.com/larissa-engelbrecht/compliance-assistant.git](https://github.com/larissa-engelbrecht/compliance-assistant.git)
+git clone https://github.com/larissa-engelbrecht/compliance-assistant.git
 cd compliance-assistant
 ```
 
