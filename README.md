@@ -1,4 +1,4 @@
-# 📋 Compliance Assistant
+# Compliance Assistant
 
 **A Retrieval-Augmented Generation (RAG) platform for navigating the EU Artificial Intelligence Act.**
 
@@ -11,13 +11,13 @@
 
 ---
 
-## 🎥 Demo
+## Demo
 ![App Demo](demo.gif)
 *(Note: If the GIF above doesn't load, please check the repo for `demo.gif`)*
 
 ---
 
-## 🏗️ Technical Architecture
+## Technical Architecture
 
 This project is not just a wrapper around an API; it is a modular, containerized application designed for scalability.
 
@@ -38,7 +38,7 @@ The application handles compliance logic via a **Strategy Pattern**. The backend
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Component | Technology | Reason |
 | :--- | :--- | :--- |
@@ -51,7 +51,7 @@ The application handles compliance logic via a **Strategy Pattern**. The backend
 
 ---
 
-## 🚀 How to Run Locally
+## How to Run Locally
 
 ### Prerequisites
 * Docker & Docker Compose
@@ -129,7 +129,7 @@ Open your browser to [http://localhost:8501](http://localhost:8501).
 
 ---
 
-## 🔮 Future Roadmap (v2.0)
+## Future Roadmap (v2.0)
 
 * **GraphRAG Implementation:** Move beyond semantic similarity to knowledge graphs, linking "Policies" directly to their required "Evidence" nodes.
 * **Human-in-the-Loop Redlining:** An interface for compliance officers to edit and approve AI-generated audit responses.
