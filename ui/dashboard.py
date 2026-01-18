@@ -1,161 +1,75 @@
 import streamlit as st
 import requests
-import json
+import os
+from dotenv import load_dotenv
 
-# --- Configuration ---
-# In production, you would load this from an environment variable
-API_URL = "http://127.0.0.1:8000"
+# Load environment variables
+load_dotenv()
+
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
 st.set_page_config(
-    page_title="Compliance Assistant - EU AI Act", 
-    page_icon="",
+    page_title="Compliance Assistant", 
+    page_icon="📋",
     layout="wide"
 )
 
-# --- App Header ---
-st.title("Compliance Assistant")
+st.title("📋 Compliance Assistant")
 st.markdown("""
-**Your AI-powered guide to the new European Artificial Intelligence Act.** _Assess risk, identify obligations, and chat with the regulation._
+**Your AI-powered guide to the EU Artificial Intelligence Act.** _Answers are grounded in the official legal text._
 """)
-st.markdown("---")
+st.divider()
 
-# --- SIDEBAR: The Dynamic Auditor ---
-with st.sidebar:
-    st.header("🛡️ Compliance Auditor")
-    
-    # 1. Fetch the Questionnaire dynamically from the Backend
-    questions = []
-    try:
-        response = requests.get(f"{API_URL}/questionnaire")
-        if response.status_code == 200:
-            questions = response.json()
-            st.success("✅ Module Loaded: EU AI Act")
-        else:
-            st.error("⚠️ Could not load regulation module.")
-    except Exception as e:
-        st.error(f"🔴 Backend Offline: {e}")
-
-    # 2. Build the Form dynamically
-    with st.form("audit_form"):
-        st.info("Describe your AI system to get a risk assessment.")
-        
-        user_inputs = {}
-        
-        # A. Static Fields (Always needed)
-        user_inputs["description"] = st.text_area(
-            "System Description", 
-            "E.g., An AI system that evaluates loan applications..."
-        )
-
-        # B. Dynamic Fields (From the Module)
-        for q in questions:
-            if q["type"] == "select":
-                user_inputs[q["id"]] = st.selectbox(q["text"], q["options"])
-            elif q["type"] == "boolean":
-                user_inputs[q["id"]] = st.checkbox(q["text"])
-            elif q["type"] == "text":
-                user_inputs[q["id"]] = st.text_input(q["text"])
-        
-        submitted = st.form_submit_button("Run Compliance Scan")
-        
-        # 3. Handle Submission
-        if submitted:
-            with st.spinner("Consulting the EU AI Act..."):
-                try:
-                    # Send generic inputs to the generic scan endpoint
-                    payload = {"inputs": user_inputs}
-                    scan_response = requests.post(f"{API_URL}/scan", json=payload)
-                    
-                    if scan_response.status_code == 200:
-                        report = scan_response.json()
-                        
-                        # --- Display Results ---
-                        st.divider()
-                        st.subheader(f"Risk Level: {report['risk_level']}")
-                        
-                        # Visual Indicator
-                        if report['risk_level'] == "High":
-                            st.error("🚨 HIGH RISK SYSTEM")
-                        elif report['risk_level'] == "Limited":
-                            st.warning("⚠️ LIMITED RISK")
-                        else:
-                            st.success("✅ MINIMAL RISK")
-
-                        st.metric("Compliance Confidence", f"{report['compliance_score']}%")
-                        
-                        # Key Obligations
-                        st.markdown("### 📋 Key Obligations")
-                        if report['key_obligations']:
-                            for ob in report['key_obligations']:
-                                st.info(ob)
-                        else:
-                            st.write("No specific obligations found for this category.")
-
-                        # Detailed Checks (Expandable)
-                        with st.expander("🔍 View Detailed Analysis"):
-                            for check in report['checks']:
-                                icon = "✅" if check['status'] == "PASS" else "❌" if check['status'] == "FAIL" else "⚠️"
-                                st.markdown(f"**{icon} {check['name']}**")
-                                st.caption(check['reason'])
-                                st.caption(f"Ref: {', '.join(check['reference_articles'])}")
-                                st.divider()
-                                
-                    else:
-                        st.error(f"Scan Failed: {scan_response.text}")
-                        
-                except Exception as e:
-                    st.error(f"Connection Error: {e}")
-
-# --- MAIN AREA: The Chatbot ---
-st.header("💬 Regulatory Chat")
-st.caption("Ask questions about the EU AI Act (e.g., 'What are the rules for biometric data?')")
-
-# Initialize chat history in session state
+# --- CHAT HISTORY (The Permanent View) ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display previous messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+        
+        # Render Sources from History
+        if "sources" in message:
+            with st.expander("📚 View Regulatory Sources"):
+                for idx, source in enumerate(message["sources"]):
+                    st.markdown(f"**Source {idx+1}**")
+                    st.caption(f"Relevance: {source['score']:.2f}")
+                    st.markdown(f"> *{source['text'][:400]}...*")
+                    st.divider()
 
-# Chat Input
-if prompt := st.chat_input("Type your question here..."):
-    # 1. Add User Message
+
+if prompt := st.chat_input("Ask questions about the EU AI Act (e.g., 'What are the rules for biometric data?')"):
+    
+    # 1. Add User Message to State
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # 2. Get AI Response
+    # 2. Generate AI Response
     with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        
-        try:
-            with st.spinner("Analyzing regulation..."):
-                api_response = requests.post(f"{API_URL}/chat", json={"message": prompt})
+        with st.spinner("Consulting regulation..."):
+            try:
+                payload = {"message": prompt}
+                api_response = requests.post(f"{API_URL}/chat", json=payload)
                 
                 if api_response.status_code == 200:
                     data = api_response.json()
                     answer = data["response"]
-                    sources = data["sources"]
+                    sources = data.get("sources", [])
                     
-                    # A. Show the Answer
-                    message_placeholder.markdown(answer)
+                    # 3. Save directly to State
+                    st.session_state.messages.append({
+                        "role": "assistant", 
+                        "content": answer,
+                        "sources": sources
+                    })
                     
-                    # B. Show the Sources (The "Click to View" feature)
-                    if sources:
-                        with st.expander("📚 View Regulatory Sources"):
-                            for idx, source in enumerate(sources):
-                                st.markdown(f"**Source {idx+1} (Page {source['page']})**")
-                                st.caption(f"Relevance Score: {source['score']:.2f}")
-                                # Use blockquote for the actual legal text
-                                st.markdown(f"> {source['text'][:500]}...") # Truncate long text
-                                st.divider()
-                    
-                    # Add to history 
-                    st.session_state.messages.append({"role": "assistant", "content": answer})
+                    # 4. FORCE RERUN (The Fix)
+                    # This makes the script restart immediately so the message 
+                    # is rendered by the main history loop above.
+                    st.rerun()
                     
                 else:
-                    message_placeholder.error("System Error: Could not retrieve answer.")
-        except Exception as e:
-            message_placeholder.error(f"Connection Error: {e}")
+                    st.error("System Error: Could not retrieve answer.")
+            except Exception as e:
+                st.error(f"Connection Error: {e}")
