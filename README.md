@@ -2,10 +2,6 @@
 
 **A Retrieval-Augmented Generation (RAG) platform for navigating the EU Artificial Intelligence Act.**
 
-![Project Status](https://img.shields.io/badge/Status-MVP_Complete-success)
-![Tech Stack](https://img.shields.io/badge/Stack-FastAPI_|_LlamaIndex_|_Streamlit_|_Docker-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
-
 > **The Problem:** Standard Large Language Models (LLMs) often hallucinate when asked about specific legal articles.
 > **The Solution:** Compliance Assistant uses a **RAG Architecture** to ground every answer in the official legal text, providing precise citations and raw source evidence for verification.
 
